@@ -14,6 +14,7 @@ using System.Linq.Expressions;
 using System.Security.Claims;
 using System.Text;
 using System.Threading.Tasks;
+using task_managment.Common;
 
 namespace TASK.Service.Service
 {
@@ -43,17 +44,29 @@ namespace TASK.Service.Service
 
         public ServiceRespone<TasksRepone> Delete(Tasks entity)
         {
-             _taskRepository.Delete(entity);
-            _unitOfWork.Save();
+            if (_taskRepository.CanUserDo(entity.Id))
+            {
+                _taskRepository.Delete(entity);
+                _unitOfWork.Save();
+            }
+            else {
+                TaskObj.errorMsg = "you are not allowed to do this action";
+            }
             return TaskObj;
         }
 
         public async Task<ServiceRespone<TasksRepone>> DeleteById(int Id)
         {
-            var task = await _taskRepository.GetById(Id);
-              _taskRepository.Delete(task);
-            _unitOfWork.Save();
-           
+            if (_taskRepository.CanUserDo(Id))
+            {
+                var task = await _taskRepository.GetById(Id);
+                _taskRepository.Delete(task);
+                _unitOfWork.Save();
+            
+        }
+            else {
+                TaskObj.errorMsg = "you are not allowed to do this action";
+            }
             return TaskObj;
         }
 
@@ -66,8 +79,9 @@ namespace TASK.Service.Service
 
         public async Task<ServiceRespone<IEnumerable<TasksRepone>>> GetAll(Expression<Func<Tasks, bool>> predicate = null)
         {
-           
-            var task = await _taskRepository.GetAll(predicate);
+          
+            var tasks = await _taskRepository.GetAll(predicate);
+            var task = tasks.Where(x=>x.UsersId==UserId.Id);
             //task.Where(x=>x.UsersId== id);
             TaskList.result = _mapper.Map<IEnumerable<TasksRepone>>(task);
             return TaskList;
@@ -75,16 +89,29 @@ namespace TASK.Service.Service
 
         public async Task<ServiceRespone<TasksRepone>> GetById(int Id)
         {
+            if (_taskRepository.CanUserDo(Id)) { 
             var task = await _taskRepository.GetById(Id);
             TaskObj.result = _mapper.Map<TasksRepone>(task);
+            }
+            else
+            {
+                TaskObj.errorMsg = "you are not allowed to do this action";
+            }
             return TaskObj;
         }
 
         public ServiceRespone<TasksRepone> Update(Tasks entity)
         {
-            var task =  _taskRepository.Update(entity);
-            _unitOfWork.Save();
-            TaskObj.result = _mapper.Map<TasksRepone>(task);
+            if (_taskRepository.CanUserDo(entity.Id))
+            {
+                var task = _taskRepository.Update(entity);
+                _unitOfWork.Save();
+                TaskObj.result = _mapper.Map<TasksRepone>(task);
+            }
+            else
+            {
+                TaskObj.errorMsg = "you are not allowed to do this action";
+            }
             return TaskObj;
         }
 

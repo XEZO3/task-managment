@@ -9,5 +9,6 @@ namespace Domain.IRepository
 {
     public interface ITaskRepository:IReopsitory<Tasks>
     {
+        public bool CanUserDo(int TaskId);
     }
 }
